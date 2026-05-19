@@ -155,7 +155,6 @@ function isMuffled(doc, pos) {
   // Cast a ray from sound origin to cursor; if it hits a wall, we're muffled.
   try {
     const origin = { x: doc.x, y: doc.y };
-    const ray = new Ray(origin, pos);
     const collision = CONFIG.Canvas.polygonBackends.sound.testCollision(
       origin, pos, { type: "sound", mode: "any" }
     );
@@ -215,7 +214,7 @@ function resolveFaGlyph(className) {
   document.body.appendChild(el);
   const style = getComputedStyle(el, "::before");
   let content = style.content || "";
-  const fontFamily = style.fontFamily || "Font Awesome 6 Pro";
+  const fontFamily = style.fontFamily || "Font Awesome 7 Pro";
   const fontWeight = style.fontWeight || "900";
   document.body.removeChild(el);
 
@@ -238,8 +237,15 @@ function buildIconSprite(doc) {
   if (!content) return null;
 
   const tint = parseInt(colorStr.replace("#", ""), 16);
-  const text = new PIXI.Text(content, {
+  const families = [
     fontFamily,
+    "Font Awesome 7 Pro",
+    "Font Awesome 6 Pro",
+    "Font Awesome 6 Free",
+    "FontAwesome",
+  ].filter(Boolean);
+  const text = new PIXI.Text(content, {
+    fontFamily: families,
     fontWeight,
     fontSize: size,
     fill: isNaN(tint) ? 0xffffff : tint,
