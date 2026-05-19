@@ -35,6 +35,49 @@ Hooks.once("init", () => {
     range: { min: 0, max: 2000, step: 50 },
     default: 300,
   });
+
+  const reRender = () => { if (!game.user?.isGM) renderAllIcons(); };
+
+  game.settings.register(MODULE_ID, "showIcon", {
+    name: "DYHT.SettingShowIcon",
+    hint: "DYHT.SettingShowIconHint",
+    scope: "client",
+    config: true,
+    type: Boolean,
+    default: true,
+    onChange: reRender,
+  });
+
+  game.settings.register(MODULE_ID, "iconClass", {
+    name: "DYHT.SettingIconClass",
+    hint: "DYHT.SettingIconClassHint",
+    scope: "client",
+    config: true,
+    type: String,
+    default: "fa-solid fa-volume-high",
+    onChange: reRender,
+  });
+
+  game.settings.register(MODULE_ID, "iconSize", {
+    name: "DYHT.SettingIconSize",
+    hint: "DYHT.SettingIconSizeHint",
+    scope: "client",
+    config: true,
+    type: Number,
+    range: { min: 16, max: 256, step: 4 },
+    default: 64,
+    onChange: reRender,
+  });
+
+  game.settings.register(MODULE_ID, "iconColor", {
+    name: "DYHT.SettingIconColor",
+    hint: "DYHT.SettingIconColorHint",
+    scope: "client",
+    config: true,
+    type: String,
+    default: "#ffffff",
+    onChange: reRender,
+  });
 });
 
 // ─── State ────────────────────────────────────────────────────────────────────
@@ -42,6 +85,7 @@ Hooks.once("init", () => {
 let _activeSound  = null;
 let _activeDoc    = null;
 let _activeEffect = null; // current AudioNode effect applied to the sound
+const _iconSprites = new Map(); // doc.id -> PIXI.Text marker at sound origin
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -128,6 +172,81 @@ function findSoundAtPosition(pos) {
     if (Math.hypot(dx, dy) <= radiusPx) return doc;
   }
   return null;
+}
+
+/**
+ * Resolve a Font Awesome class string (e.g. "fa-solid fa-volume-high") into the
+ * underlying glyph + font-family by sniffing the ::before pseudo-element. This
+ * way the user can pick any FA Pro icon by class name without us hard-coding
+ * unicode points.
+ */
+function resolveFaGlyph(className) {
+  const el = document.createElement("i");
+  el.className = className;
+  el.style.position = "absolute";
+  el.style.left = "-9999px";
+  el.style.top = "-9999px";
+  el.style.visibility = "hidden";
+  document.body.appendChild(el);
+  const style = getComputedStyle(el, "::before");
+  let content = style.content || "";
+  // content comes back like `""` — strip surrounding quotes.
+  content = content.replace(/^["']|["']$/g, "");
+  const fontFamily = style.fontFamily || "Font Awesome 6 Pro";
+  const fontWeight = style.fontWeight || "900";
+  document.body.removeChild(el);
+  return { content, fontFamily, fontWeight };
+}
+
+function buildIconSprite(doc) {
+  const className = game.settings.get(MODULE_ID, "iconClass") || "fa-solid fa-volume-high";
+  const size      = game.settings.get(MODULE_ID, "iconSize") ?? 64;
+  const colorStr  = game.settings.get(MODULE_ID, "iconColor") || "#ffffff";
+  const { content, fontFamily, fontWeight } = resolveFaGlyph(className);
+  if (!content) return null;
+
+  const tint = parseInt(colorStr.replace("#", ""), 16);
+  const text = new PIXI.Text(content, {
+    fontFamily,
+    fontWeight,
+    fontSize: size,
+    fill: isNaN(tint) ? 0xffffff : tint,
+    stroke: 0x000000,
+    strokeThickness: Math.max(2, Math.round(size / 12)),
+    align: "center",
+  });
+  text.anchor.set(0.5);
+  text.position.set(doc.x, doc.y);
+  text.eventMode = "none";
+  return text;
+}
+
+function removeIconFor(docId) {
+  const sprite = _iconSprites.get(docId);
+  if (!sprite) return;
+  try { sprite.parent?.removeChild(sprite); sprite.destroy(); }
+  catch (_e) { /* already gone */ }
+  _iconSprites.delete(docId);
+}
+
+function clearAllIcons() {
+  for (const id of [..._iconSprites.keys()]) removeIconFor(id);
+}
+
+function renderAllIcons() {
+  clearAllIcons();
+  if (!game.settings.get(MODULE_ID, "showIcon")) return;
+  if (!canvas?.sounds?.placeables) return;
+
+  const layer = canvas.sounds ?? canvas.stage;
+  for (const placeable of canvas.sounds.placeables) {
+    const doc = placeable.document;
+    if (doc.hidden) continue;
+    const sprite = buildIconSprite(doc);
+    if (!sprite) continue;
+    layer.addChild(sprite);
+    _iconSprites.set(doc.id, sprite);
+  }
 }
 
 // ─── Preview control ─────────────────────────────────────────────────────────
@@ -241,6 +360,7 @@ function detachListeners() {
   canvas.stage?.off("pointermove", onPointerMove);
   canvas.stage?.off("pointerleave", onPointerLeave);
   stopPreview();
+  clearAllIcons();
 }
 
 // ─── Hooks ────────────────────────────────────────────────────────────────────
@@ -248,9 +368,21 @@ function detachListeners() {
 Hooks.on("canvasReady", () => {
   if (game.user.isGM) return;
   attachListeners();
+  renderAllIcons();
 });
 
 Hooks.on("canvasTearDown", () => {
   if (game.user.isGM) return;
   detachListeners();
 });
+
+// Keep origin icons in sync with the sounds layer. Players only — GM already
+// has the native control icon for placement.
+function refreshIconsForPlayers() {
+  if (game.user.isGM) return;
+  renderAllIcons();
+}
+
+Hooks.on("createAmbientSound",  refreshIconsForPlayers);
+Hooks.on("updateAmbientSound",  refreshIconsForPlayers);
+Hooks.on("deleteAmbientSound",  refreshIconsForPlayers);
