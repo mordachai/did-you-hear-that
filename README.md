@@ -19,16 +19,24 @@ Great for spooky dungeons, busy taverns, and that one waterfall the GM keeps for
 
 Foundry's built-in `playAtPosition` only fires when a token enters the radius. Players without tokens, or just exploring the map with the cursor, get nothing. With this Theather of the Mind scenes can be filled with sound cues .
 
-## Settings (per client/player)
+## Settings
 
-| Setting                 | Default                   | Notes                                                                                      |
-| ----------------------- | ------------------------- | ------------------------------------------------------------------------------------------ |
-| Enabled                 | on                        | Toggle previews without disabling the module.                                              |
-| Fade duration           | 300 ms                    | 0 = instant. Crank it up for dramatic creep-ins.                                           |
-| Show sound origin icon  | on                        | Render a marker at every non-hidden ambient sound so players know where to hover.          |
-| Sound origin icon class | `fa-solid fa-volume-high` | Any Font Awesome Pro class. Examples: `fa-solid fa-music`, `fa-duotone fa-waveform-lines`. |
-| Sound origin icon size  | 64 px                     | Font size of the marker glyph.                                                             |
-| Sound origin icon color | `#ffffff`                 | Hex color for the marker.                                                                  |
+Player-side (each client controls their own):
+
+| Setting                | Default | Notes                                                                  |
+| ---------------------- | ------- | ---------------------------------------------------------------------- |
+| Enabled                | on      | Toggle previews without disabling the module.                          |
+| Show sound origin icon | on      | Hide the on-canvas marker if you find it visually noisy.               |
+
+GM-side (world settings, apply to everyone):
+
+| Setting                   | Default           | Notes                                                                                                    |
+| ------------------------- | ----------------- | -------------------------------------------------------------------------------------------------------- |
+| Fade duration             | 300 ms            | 0 = instant. Crank it up for dramatic creep-ins.                                                         |
+| Sound origin icon class   | `fa-light fa-ear` | Any Font Awesome Pro class. Examples: `fa-solid fa-volume-high`, `fa-solid fa-music`, `fa-light fa-ear`. |
+| Sound origin icon size    | 32 px             | Font size of the marker glyph.                                                                           |
+| Sound origin icon color   | `#ffffff`         | Hex color for the marker.                                                                                |
+| Sound origin icon opacity | 0.5               | Marker transparency. 0 = invisible, 1 = fully opaque.                                                    |
 
 ## Install
 

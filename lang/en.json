@@ -10,5 +10,7 @@
   "DYHT.SettingIconSize": "Sound Origin Icon Size (px)",
   "DYHT.SettingIconSizeHint": "Font size for the origin icon, in pixels.",
   "DYHT.SettingIconColor": "Sound Origin Icon Color",
-  "DYHT.SettingIconColorHint": "Hex color for the origin icon (e.g. #ffffff)."
+  "DYHT.SettingIconColorHint": "Hex color for the origin icon (e.g. #ffffff).",
+  "DYHT.SettingIconOpacity": "Sound Origin Icon Opacity",
+  "DYHT.SettingIconOpacityHint": "How transparent the origin icon is. 0 = invisible, 1 = fully opaque."
 }

@@ -29,7 +29,7 @@ Hooks.once("init", () => {
   game.settings.register(MODULE_ID, "fadeDuration", {
     name: "DYHT.SettingFadeDuration",
     hint: "DYHT.SettingFadeDurationHint",
-    scope: "client",
+    scope: "world",
     config: true,
     type: Number,
     range: { min: 0, max: 2000, step: 50 },
@@ -51,33 +51,58 @@ Hooks.once("init", () => {
   game.settings.register(MODULE_ID, "iconClass", {
     name: "DYHT.SettingIconClass",
     hint: "DYHT.SettingIconClassHint",
-    scope: "client",
+    scope: "world",
     config: true,
     type: String,
-    default: "fa-solid fa-volume-high",
+    default: "fa-light fa-ear",
     onChange: reRender,
   });
 
   game.settings.register(MODULE_ID, "iconSize", {
     name: "DYHT.SettingIconSize",
     hint: "DYHT.SettingIconSizeHint",
-    scope: "client",
+    scope: "world",
     config: true,
     type: Number,
     range: { min: 16, max: 256, step: 4 },
-    default: 64,
+    default: 32,
     onChange: reRender,
   });
 
   game.settings.register(MODULE_ID, "iconColor", {
     name: "DYHT.SettingIconColor",
     hint: "DYHT.SettingIconColorHint",
-    scope: "client",
+    scope: "world",
     config: true,
     type: String,
     default: "#ffffff",
     onChange: reRender,
   });
+
+  game.settings.register(MODULE_ID, "iconOpacity", {
+    name: "DYHT.SettingIconOpacity",
+    hint: "DYHT.SettingIconOpacityHint",
+    scope: "world",
+    config: true,
+    type: Number,
+    range: { min: 0, max: 1, step: 0.05 },
+    default: 0.5,
+    onChange: reRender,
+  });
+});
+
+// Hide GM-only world settings from non-GM players in the settings UI. World
+// settings normally render as read-only rows for players; we want them gone
+// entirely so players only see the two toggles that affect their client.
+Hooks.on("renderSettingsConfig", (app, html) => {
+  if (game.user?.isGM) return;
+  const root = html instanceof HTMLElement ? html : html?.[0];
+  if (!root) return;
+  const gmOnly = ["fadeDuration", "iconClass", "iconSize", "iconColor", "iconOpacity"];
+  for (const key of gmOnly) {
+    const row = root.querySelector(`[name="${MODULE_ID}.${key}"]`)?.closest(".form-group");
+    if (row) row.style.display = "none";
+  }
 });
 
 // ─── State ────────────────────────────────────────────────────────────────────
@@ -190,11 +215,17 @@ function resolveFaGlyph(className) {
   document.body.appendChild(el);
   const style = getComputedStyle(el, "::before");
   let content = style.content || "";
-  // content comes back like `""` — strip surrounding quotes.
-  content = content.replace(/^["']|["']$/g, "");
   const fontFamily = style.fontFamily || "Font Awesome 6 Pro";
   const fontWeight = style.fontWeight || "900";
   document.body.removeChild(el);
+
+  // getComputedStyle wraps the glyph in literal quotes; duotone joins two quoted
+  // glyphs with " / ". Strip all quotes and slashes, then keep only the first
+  // codepoint so duotone fallbacks render as a single glyph.
+  content = content.replace(/["'/]/g, "").trim();
+  const chars = [...content];
+  if (chars.length > 1) content = chars[0];
+
   return { content, fontFamily, fontWeight };
 }
 
@@ -202,6 +233,7 @@ function buildIconSprite(doc) {
   const className = game.settings.get(MODULE_ID, "iconClass") || "fa-solid fa-volume-high";
   const size      = game.settings.get(MODULE_ID, "iconSize") ?? 64;
   const colorStr  = game.settings.get(MODULE_ID, "iconColor") || "#ffffff";
+  const opacity   = game.settings.get(MODULE_ID, "iconOpacity") ?? 0.5;
   const { content, fontFamily, fontWeight } = resolveFaGlyph(className);
   if (!content) return null;
 
@@ -217,6 +249,7 @@ function buildIconSprite(doc) {
   });
   text.anchor.set(0.5);
   text.position.set(doc.x, doc.y);
+  text.alpha = Math.min(1, Math.max(0, opacity));
   text.eventMode = "none";
   return text;
 }
