@@ -1,0 +1,6 @@
+{
+  "DYHT.SettingEnabled": "Enable Sound Preview",
+  "DYHT.SettingEnabledHint": "Allow hovering over the canvas to preview nearby ambient sounds. Each player controls this individually.",
+  "DYHT.SettingFadeDuration": "Fade Duration (ms)",
+  "DYHT.SettingFadeDurationHint": "How long the fade in/out takes when entering or leaving a sound's radius. Set to 0 for instant."
+}

@@ -1,0 +1,53 @@
+name: Create Release from module.json
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'module.json'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get Version
+        id: get_version
+        run: |
+          VERSION=$(jq -r .version module.json)
+          echo "Detected version: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check if Tag Exists
+        uses: mukunku/tag-exists-action@v1.6.0
+        id: check_tag
+        with:
+          tag: 'v${{ steps.get_version.outputs.version }}'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Zip Files
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          zip -r module.zip module.json scripts lang LICENSE README.md
+
+      - name: Create Release
+        if: steps.check_tag.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.get_version.outputs.version }}
+          name: Release v${{ steps.get_version.outputs.version }}
+          files: |
+            module.zip
+            module.json
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
