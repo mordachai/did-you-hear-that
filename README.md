@@ -6,18 +6,20 @@ A tiny Foundry VTT module that lets **players preview ambient sounds by hovering
 
 Great for spooky dungeons, busy taverns, and that one waterfall the GM keeps forgetting to point out.
 
+<img width="1166" height="766" alt="image" src="https://github.com/user-attachments/assets/8899c921-e541-47f0-8ca8-d7464301152b" />
+
 ## What it does
 
 - Hover the cursor inside an ambient sound's radius → it plays.
 - Move out → it stops (with a smooth fade).
 - Respects everything the GM set: **volume, easing, base effect, muffled-through-walls effect**, and the player's global Ambient volume slider.
 - Optional **origin marker icon** rendered at every non-hidden ambient sound, so players know where to hover. Icon is a Font Awesome Pro class — pick any glyph, size, and color in settings.
-- GM is excluded by default — you already know where the sounds are.
+- GM view is clean, no markers.
 - 100% client-side. Nothing broadcast, nothing synced, no extra load.
 
 ## Why it exists
 
-Foundry's built-in `playAtPosition` only fires when a token enters the radius. Players without tokens, or just exploring the map with the cursor, get nothing. With this Theather of the Mind scenes can be filled with sound cues .
+Foundry's built-in `playAtPosition` only fires when a token enters the radius. Players without tokens, or just exploring the map with the cursor, get nothing. So this a module developed for Theather of the Mind scenes, where they can be filled with sound cues to help immersion or give clues to players.
 
 ## Settings
 
