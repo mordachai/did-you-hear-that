@@ -52,6 +52,10 @@ Manifest URL:
 https://github.com/mordachai/did-you-hear-that/releases/latest/download/module.json
 ```
 
+- OR -
+
+Look for "did you hear that" in modules install search
+
 ## Compatibility
 
 Foundry VTT **v13 minimum, v14 verified**. Plays nice with the Levels feature (uses document coords).
